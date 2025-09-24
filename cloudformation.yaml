@@ -1,0 +1,56 @@
+Description: My super cool Lambda with intentional security issues
+
+# INSERIMOS RECURSOS DEMAIS, HARDCODED SECRETS e DEPRECATED ARGUMENTS
+
+Parameters:
+  ParamTracingConfig:
+    Description: Active tracing config
+    Type: String
+    Default: "PassThrough"
+
+Resources:
+  WrongTracingConfigValueLambdaFunctionWithRef:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-analysis"
+      Runtime: nodejs12.x 
+      Role: !GetAtt IAM4Lambda.Arn
+      Handler: exports.test
+      Code:
+        ZipFile: |
+          console.log("Hello World");
+          const secretKey = "FAKESECRET12345";
+      Environment:
+        Variables:
+          SECRET_TOKEN: "hardcodedtoken"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-analysis"
+        - Key: Environment
+          Value: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}"
+      Tracing_config:
+        Mode: !Ref ParamTracingConfig 
+      MemorySize: 10000  
+      Timeout: 900      
+      VpcConfig: {}     
+      Layers: []    
+
+  IAM4Lambda:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub "${AWS::AccountId}-${CompanyName}-${Environment}-lambda-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaFullAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "*" 
+                Resource: "*"
