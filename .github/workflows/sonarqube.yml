@@ -1,53 +1,48 @@
 name: SonarQube Python Demo
-
-on:
+'on':
   push:
-    branches: [main]
-  pull_request:
-
+    branches:
+      - main
+  pull_request: null
 jobs:
   sonar:
     runs-on: ubuntu-latest
     services:
       sonarqube:
-        image: sonarqube:latest
+        image: 'sonarqube:latest'
         ports:
-          - 9000:9000
-        options: |
-          --health-cmd="curl -f http://localhost:9000 || exit 1" --health-interval=10s --health-timeout=5s --health-retries=10
-    #NÃO FAÇAM ISSO EM CASA!
+          - '9000:9000'
+        options: >
+          --health-cmd="curl -f http://localhost:9000 || exit 1"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-
       - name: Wait for SonarQube
         run: |
           echo "Esperando SonarQube subir..."
           until curl -s http://localhost:9000 > /dev/null; do
             sleep 10
           done
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install boto3 fastapi requests uvicorn
-    
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-    
       - name: Install Sonar Scanner
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.2.5219-linux.zip
-          unzip sonar-scanner-cli-4.9.2.5219-linux.zip
+        run: >
+          wget
+          https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.2.5219-linux.zip
 
+          unzip sonar-scanner-cli-4.9.2.5219-linux.zip
       - name: Run Sonar Scanner
         run: |
           ./sonar-scanner-4.9.2.5219-linux/bin/sonar-scanner \
