@@ -47,7 +47,7 @@ jobs:
         run: checkov -d ./templates --framework cloudformation --output html > checkov_report.html
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: checkov-report
           path: checkov_report.html
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Checkov HTML report
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: checkov-report
           path: ./checkov_report
