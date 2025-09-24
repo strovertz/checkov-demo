@@ -9,17 +9,48 @@ on:
       - main
 
 jobs:
-  build:
-
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
+    outputs:
+      python-path: ${{ steps.python-path.outputs.python-location }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        id: python-path
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-      - name: Test CF with checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
+          python-version: 3.11
+
+      - name: Install Checkov
+        run: pip install checkov
+
+  scan:
+    name: Run Checkov Scan
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Checkov
+        run: checkov -d ./templates --framework cloudformation --output cli
+
+  report:
+    name: Generate and Upload Report
+    needs: scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate HTML report
+        run: checkov -d ./templates --framework cloudformation --output html > checkov_report.html
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3
         with:
-          framework: cloudformation 
+          name: checkov-report
+          path: checkov_report.html
