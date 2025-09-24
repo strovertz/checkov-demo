@@ -43,25 +43,10 @@ jobs:
       - name: Run Checkov CLI
         run: checkov -d ./templates --framework cloudformation --output cli
 
-      - name: Generate HTML report
-        run: checkov -d ./templates --framework cloudformation --output html > checkov_report.html
+      - name: Run Checkov and generate SARIF
+        run: checkov -d ./templates --framework cloudformation --output sarif > checkov.sarif
 
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v2
         with:
-          name: checkov-report
-          path: checkov_report.html
-
-  report:
-    name: Download HTML Report
-    needs: scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Checkov HTML report
-        uses: actions/download-artifact@v4
-        with:
-          name: checkov-report
-          path: ./checkov_report
-
-      - name: List files
-        run: ls -l ./checkov_report
+          sarif_file: checkov.sarif
