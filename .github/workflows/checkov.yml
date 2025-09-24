@@ -41,7 +41,7 @@ jobs:
         run: pip install checkov
 
       - name: Run Checkov CLI
-        run: checkov -d . --framework cloudformation --output cli
+        run: checkov -d . --framework cloudformation --output cli --soft-fail-on all
 
       - name: Run Checkov and generate SARIF
         run: checkov -d . --framework cloudformation --output sarif > checkov.sarif
