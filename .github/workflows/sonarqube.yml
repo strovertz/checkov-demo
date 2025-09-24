@@ -12,14 +12,11 @@ jobs:
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
-    outputs:
-      python-path: ${{ steps.python-path.outputs.python-location }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Python
-        id: python-path
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
@@ -35,16 +32,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run Checkov
-        run: checkov -d ./templates --framework cloudformation --output cli
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
-  report:
-    name: Generate and Upload Report
-    needs: scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run Checkov CLI
+        run: checkov -d ./templates --framework cloudformation --output cli
 
       - name: Generate HTML report
         run: checkov -d ./templates --framework cloudformation --output html > checkov_report.html
@@ -54,3 +51,17 @@ jobs:
         with:
           name: checkov-report
           path: checkov_report.html
+
+  report:
+    name: Download HTML Report
+    needs: scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Checkov HTML report
+        uses: actions/download-artifact@v3
+        with:
+          name: checkov-report
+          path: ./checkov_report
+
+      - name: List files
+        run: ls -l ./checkov_report
